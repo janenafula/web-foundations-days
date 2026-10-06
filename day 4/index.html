@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuickNotes App</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <header>
+    <h1>QuickNotes</h1>
+    <p>Organize your thoughts effortlessly</p>
+  </header>
+
+  <main>
+    <section>
+      <form id="note-form">
+        <label for="note-input">Note Content</label>
+        <input type="text" id="note-input" placeholder="Enter your note (max 200 chars)...">
+
+        <select id="note-category">
+          <option value="Personal">Personal</option>
+          <option value="Work">Work</option>
+          <option value="Ideas">Ideas</option>
+        </select>
+
+        <button type="submit">Add Note</button>
+      </form>
+      <p id="error-message"></p>
+    </section>
+
+    <section>
+      <div class="search-container">
+        <input type="text" id="search-input" placeholder="Search notes...">
+      </div>
+      <p id="note-count">0 notes</p>
+      <ul id="notes-list"></ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; QuickNotes App. Built with HTML, CSS, and Vanilla JavaScript.</p>
+  </footer>
+</body>
+</html>

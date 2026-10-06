@@ -1,0 +1,172 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+  background-color: #f4f6f8;
+  color: #333;
+}
+
+header {
+  background-color: #2c3e50;
+  color: #ffffff;
+  text-align: center;
+  padding: 1.5rem 1rem;
+}
+
+header h1 {
+  margin: 0;
+}
+
+main {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+footer {
+  text-align: center;
+  padding: 1rem;
+  background-color: #e9ecef;
+  margin-top: 2rem;
+  font-size: 0.9rem;
+}
+
+/* Form Styles */
+#note-form {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  align-items: center;
+  background: #ffffff;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+#note-form label {
+  font-weight: bold;
+}
+
+#note-input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+#note-category {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  background-color: #2980b9;
+}
+
+/* Error message */
+#error-message {
+  color: #e74c3c;
+  font-weight: bold;
+  margin-top: 0.5rem;
+  min-height: 1.2em;
+}
+
+/* Search bar */
+.search-container {
+  margin-top: 1.5rem;
+}
+
+#search-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+#note-count {
+  font-weight: bold;
+  margin-top: 1rem;
+}
+
+/* Notes List & Cards */
+#notes-list {
+  list-style: none;
+  padding: 0;
+}
+
+.note-card {
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #ffffff;
+}
+
+.note-content p {
+  margin: 0 0 0.5rem 0;
+}
+
+.note-meta {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.delete-btn {
+  background-color: #e74c3c;
+  margin-left: 1rem;
+}
+
+.delete-btn:hover {
+  background-color: #c0392b;
+}
+
+/* Category Styles */
+.category-personal {
+  border-left: 5px solid #2ecc71;
+}
+
+.category-work {
+  border-left: 5px solid #3498db;
+}
+
+.category-ideas {
+  border-left: 5px solid #9b59b6;
+}
+
+/* Responsive Styles */
+@media (max-width: 600px) {
+  #note-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .note-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .delete-btn {
+    margin-left: 0;
+    align-self: flex-end;
+  }
+}
