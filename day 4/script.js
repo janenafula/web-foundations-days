@@ -1,131 +1,58 @@
-// Element Selection
-const noteForm = document.querySelector('#note-form');
-const noteInput = document.querySelector('#note-input');
-const noteCategory = document.querySelector('#note-category');
-const searchInput = document.querySelector('#search-input');
-const notesList = document.querySelector('#notes-list');
-const noteCount = document.querySelector('#note-count');
-const errorMessage = document.querySelector('#error-message');
+const noteText = document.getElementById('note-text');
+const charCount = document.getElementById('char-count');
+const wordCount = document.getElementById('word-count');
+const clearBtn = document.getElementById('clear-btn');
+const themeToggle = document.getElementById('theme-toggle');
 
-// State Storage
-let notes = [];
+// 1. Load saved draft and theme preference from localStorage on startup
+const savedText = localStorage.getItem('noteDraft');
+if (savedText !== null) {
+    noteText.value = savedText;
+}
 
-// Initialize application
-document.addEventListener('DOMContentLoaded', () => {
-  loadNotes();
-  render();
-});
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme === 'dark') {
+    document.body.classList.add('dark');
+}
 
-// Load notes from localStorage
-function loadNotes() {
-  const savedNotes = localStorage.getItem('quicknotes_data');
-  if (savedNotes) {
-    try {
-      notes = JSON.parse(savedNotes);
-    } catch (e) {
-      notes = [];
+// 2. Core function to calculate counts, handle thresholds, and save draft
+function updateCounts() {
+    const text = noteText.value;
+    const currentLength = text.length;
+
+    // Update Character Count
+    charCount.textContent = currentLength;
+
+    // Update Word Count (splitting by whitespace, ignoring empty entries)
+    const words = text.trim() === '' ? [] : text.trim().split(/\s+/);
+    wordCount.textContent = words.length;
+
+    // Apply warning and over classes
+    charCount.classList.remove('warning', 'over');
+    if (currentLength > 200) {
+        charCount.classList.add('over');
+    } else if (currentLength > 180) {
+        charCount.classList.add('warning');
     }
-  }
+
+    // Automatically save draft to localStorage
+    localStorage.setItem('noteDraft', text);
 }
 
-// Save notes to localStorage
-function saveNotes() {
-  localStorage.setItem('quicknotes_data', JSON.stringify(notes));
-}
+// Run once on page load to initialize counts
+updateCounts();
 
-// Update Note Count Text
-function updateCount(count) {
-  if (count === 0) {
-    noteCount.textContent = '0 notes';
-  } else if (count === 1) {
-    noteCount.textContent = '1 note';
-  } else {
-    noteCount.textContent = `${count} notes`;
-  }
-}
+// 3. Event listeners
+noteText.addEventListener('input', updateCounts);
 
-// Render Notes List
-function render() {
-  notesList.textContent = '';
-  const query = searchInput.value.trim().toLowerCase();
-
-  const filteredNotes = notes.filter(note => 
-    note.text.toLowerCase().includes(query)
-  );
-
-  filteredNotes.forEach(note => {
-    const li = document.createElement('li');
-    li.className = `note-card category-${note.category.toLowerCase()}`;
-
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'note-content';
-
-    const textPara = document.createElement('p');
-    textPara.textContent = note.text;
-
-    const metaPara = document.createElement('p');
-    metaPara.className = 'note-meta';
-    metaPara.textContent = `Category: ${note.category} | Created: ${note.createdAt}`;
-
-    contentDiv.appendChild(textPara);
-    contentDiv.appendChild(metaPara);
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'delete-btn';
-    deleteBtn.textContent = 'Delete';
-    deleteBtn.addEventListener('click', () => deleteNote(note.id));
-
-    li.appendChild(contentDiv);
-    li.appendChild(deleteBtn);
-
-    notesList.appendChild(li);
-  });
-
-  updateCount(filteredNotes.length);
-}
-
-// Add Note Event Listener
-noteForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  
-  const text = noteInput.value.trim();
-  const category = noteCategory.value;
-
-  // Validation
-  if (text.length === 0) {
-    errorMessage.textContent = 'Note content cannot be empty.';
-    return;
-  }
-
-  if (text.length > 200) {
-    errorMessage.textContent = 'Note content must be 200 characters or fewer.';
-    return;
-  }
-
-  errorMessage.textContent = '';
-
-  const newNote = {
-    id: Date.now().toString(),
-    text: text,
-    category: category,
-    createdAt: new Date().toLocaleDateString()
-  };
-
-  notes.unshift(newNote);
-  saveNotes();
-  render();
-
-  noteInput.value = '';
+clearBtn.addEventListener('click', () => {
+    noteText.value = '';
+    updateCounts();
+    localStorage.removeItem('noteDraft');
 });
 
-// Delete Note
-function deleteNote(id) {
-  notes = notes.filter(note => note.id !== id);
-  saveNotes();
-  render();
-}
-
-// Search Filter Listener
-searchInput.addEventListener('input', () => {
-  render();
+themeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    const currentTheme = document.body.classList.contains('dark') ? 'dark' : 'light';
+    localStorage.setItem('theme', currentTheme);
 });
