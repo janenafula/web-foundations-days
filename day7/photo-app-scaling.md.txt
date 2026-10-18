@@ -1,0 +1,83 @@
+# SnapShare Scaling Plan
+
+## 1. Assumptions and Daily Active Users
+- Registered Users: 10,000,000[span_2](start_span)[span_2](end_span)
+- Activity Rate: 10% active each day[span_3](start_span)[span_3](end_span)
+- Daily Active Users (DAU): 1,000,000 users (10,000,000 * 0.10)[span_4](start_span)[span_4](end_span)
+- User Activity: 1 photo upload per day and 50 feed page views per day per active user[span_5](start_span)[span_5](end_span)
+- File Sizes: 2 MB per original photo, 50 KB per thumbnail[span_6](start_span)[span_6](end_span)
+- Time Estimate: 100,000 seconds per day[span_7](start_span)[span_7](end_span)[span_8](start_span)[span_8](end_span)
+
+---
+
+## 2. Metrics: Uploads, Feed Views, and Storage
+- Uploads Per Second: Average = 10 writes/sec; Peak (5x) = 50 writes/sec[span_9](start_span)[span_9](end_span)
+- Feed Views Per Second: Average = 500 reads/sec; Peak (5x) = 2,500 reads/sec[span_10](start_span)[span_10](end_span)
+- Photo Storage Per Year: 730 TB per year (1,000,000 uploads/day * 2 MB * 365 days)
+
+---
+
+## 3. Read-Heavy vs. Write-Heavy Design Implications
+- Classification: The system is heavily read-heavy (500 average / 2,500 peak reads/sec vs. only 10 average / 50 peak writes/sec)[span_11](start_span)[span_11](end_span)[span_12](start_span)[span_12](end_span).
+- Design Impact: We must optimize heavily for reads by utilizing database read replicas, caching feed metadata in Redis, and serving static image files through a global CDN to reduce database strain.
+
+---
+
+## 4. Why Photos Should Not Be Stored in the Database
+- Why not in DB: Relational databases are optimized for structured relational data and metadata queries, not large binary blobs (like 2 MB image files). Storing massive binary files in a database bloats storage size, slows down backups, and degrades query performance.
+- Where they should go: They should be stored in a dedicated Object Storage service (like AWS S3 or Google Cloud Storage) designed specifically for cheap, scalable binary file storage, while the database only stores the text metadata and file URL strings.
+
+---
+
+## 5. Architecture Diagram
+
+[Client / Mobile App] 
+       │
+       ▼
+[CDN (Content Delivery Network)] ──> Serves cached images/thumbnails close to users
+       │
+       ▼
+[Load Balancer] ──────────────────> Distributes traffic across app servers
+       │
+       ├─────────────────────────┐
+       ▼                         ▼
+[App Server 1]            [App Server 2]  (Stateless API servers)
+       │                         │
+       ├─────────────┬───────────┴───────────┐
+       ▼             ▼                       ▼
+   [Cache]     [Database Primary]     [Object Storage]
+  (Redis)      (Writes/Metadata)      (Cloud Storage for 2MB Photos)
+                     │
+                     ▼
+             [Database Replica]
+              (Read-heavy feeds)
+                     │
+                     ▼
+              [Queue & Worker] ───────> Generates 50KB Thumbnails
+
+---
+
+## 6. Component Explanations
+1. CDN: Solves latency by caching static assets on edge servers close to global users.
+2. Load Balancer: Solves single points of failure by distributing incoming requests across multiple app servers.
+3. App Servers: Solve business logic execution by handling incoming API requests concurrently and statelessly.
+4. Cache (Redis): Solves database overload by keeping hot data in fast memory for rapid access.
+5. Database with Read Replica: Solves query bottlenecks by routing heavy read traffic away from the primary write database.
+6. Object Storage: Solves local server storage limitations by securely housing large binary photo files.
+7. Queue & Worker: Solves UI blocking by processing heavy background jobs asynchronously.
+
+---
+
+## 7. Step-by-Step Upload Flow (Including Thumbnail Job)
+1. The user selects a photo on the mobile app and clicks upload, hitting the Load Balancer and an App Server.
+2. The app server uploads the raw 2 MB binary photo directly into Object Storage.
+3. The app server saves post metadata and the image URL into the primary Database.
+4. The app server pushes a thumbnail generation task into the Queue.
+5. A background Worker pulls the task from the queue, generates a 50 KB thumbnail version, and saves it back to Object Storage.
+6. The database updates the post record, and the server returns a success confirmation response to the client.
+
+---
+
+## 8. Trade-Offs
+1. Read Replicas vs. Consistency: Using read replicas speeds up feed loading significantly, but introduces slight replication lag where a user's newly posted photo might take a moment to appear on feeds.
+2. Asynchronous Thumbnail Processing: Using a background worker keeps uploads fast for the user, but means thumbnails won't be immediately visible the exact second a photo finishes uploading.
